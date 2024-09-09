@@ -14,12 +14,19 @@ pip install -qr requirements.txt
 
 pbp_sha256="$(sha256sum "${gitroot}"/private-build-plans.toml | cut -d ' ' -f 1)"
 
-build_webfonts="$(yaml-get -p build_webfonts "${gitroot}"/vars.yml)"
-upstream_branch="$(yaml-get -p branch "${gitroot}"/vars.yml)"
+vars="$(mktemp)"
+nt2json -s "${gitroot}"/vars.types.nt "${gitroot}"/vars.nt >"$vars"
 
-yaml-get -p 'spacings.*' "${gitroot}"/vars.yml | while read -r spacing; do
+build_webfonts="$(yaml-get -p build_webfonts "$vars")"
+upstream_branch="$(yaml-get -p branch "$vars")"
 
-  folder="${gitroot}/pkgs/ttf-iosevka-${spacing}${spacing:+-}custom-git"
+yaml-get -p 'spacings.*' "$vars" | while read -r spacing; do
+
+  if [ "$spacing" = normal ]; then
+    folder="${gitroot}/pkgs/ttf-iosevka-custom-git"
+  else
+    folder="${gitroot}/pkgs/ttf-iosevka-${spacing}-custom-git"
+  fi
   mkdir -p "$folder"
 
   cp "${gitroot}"/private-build-plans.toml "${folder}"/private-build-plans.toml.example

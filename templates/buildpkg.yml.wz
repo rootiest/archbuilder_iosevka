@@ -35,12 +35,6 @@ jobs:
           buildah config --workingdir /home/dev/ttfautohint ctnr
           buildah run ctnr makepkg --noconfirm -si
 
-      - name: install templating tools
-        run: |
-          python3 -m pip install -U pip setuptools wheel
-          python3 -m pip install -r requirements.txt
-          printf '%s\n' "$HOME/.local/bin" >>$GITHUB_PATH
-
       - name: render PKGBUILDs
         run: ./mk/pkgbuilds.sh
 
@@ -64,9 +58,15 @@ jobs:
           ls -lh "${RUNNER_TEMP}/dist/"
 
 @end
+      - name: make release notes
+        run: |
+          printf '%s\n' '`vars.nt`:' '```yaml' >release.md
+          cat vars.nt >>release.md
+          printf '%s\n' '```' >>release.md
+
       - name: Release
         uses: softprops/action-gh-release@@v1
         with:
           files: ${{ runner.temp }}/dist/*
           fail_on_unmatched_files: true
-          body_path: private-build-plans.toml
+          body_path: release.md

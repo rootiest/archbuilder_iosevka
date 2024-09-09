@@ -1,8 +1,17 @@
 @require(spacing, pbp_sha256, build_webfonts, branch)
 @(
-    name = '-'.join(filter(None, ('ttf-iosevka', spacing, 'custom')))
-    if isinstance(build_webfonts, str):
-        build_webfonts = build_webfonts.lower() in ('yes', 'true')
+    name = f"ttf-iosevka-{spacing}-custom"
+    if spacing == 'normal':
+        plan = 'IosevkaCustom'
+        name = 'ttf-iosevka-custom'
+    elif spacing == 'quasi-proportional':
+        plan = 'IosevkaQpCustom'
+    elif spacing == 'quasi-proportional-extension-only':
+        plan = 'IosevkaQpeCustom'
+    elif spacing == 'fontconfig-mono':
+        plan = 'IosevkaFcmCustom'
+    else:
+        plan = f"Iosevka{spacing.title()}Custom"
 )\
 # Maintainer: Andy Kluger <https://t.me/andykluger>
 # Contributor: Markus Weimar <mail@@markusweimar.de>
@@ -46,17 +55,17 @@ build () {
   cd Iosevka
   npm install
   npm update
-  NO_COLOR=1 npm run build -- @{build_webfonts and 'contents' or 'ttf'}::${_pkgname#*-}
+  NO_COLOR=1 npm run build -- @{build_webfonts and 'contents' or 'ttf'}::@{plan}
 }
 
 package () {
   install -d "${pkgdir}/usr/share/fonts/TTF"
-  install -m644 Iosevka/dist/*/ttf/*.ttf "${pkgdir}/usr/share/fonts/TTF/"
+  install -m644 Iosevka/dist/@{plan}/TTF/*.ttf "${pkgdir}/usr/share/fonts/TTF/"
 @if build_webfonts:
   install -d "${pkgdir}/usr/share/fonts/WOFF2"
-  install -m644 Iosevka/dist/*/woff2/*.woff2 "${pkgdir}/usr/share/fonts/WOFF2/"
+  install -m644 Iosevka/dist/@{plan}/WOFF2/*.woff2 "${pkgdir}/usr/share/fonts/WOFF2/"
   printf '%s\n' 'CSS BELOW:'
-  cat Iosevka/dist/*/*.css
+  cat Iosevka/dist/@{plan}/*.css
   printf '%s\n' 'CSS ABOVE'
 @end
   install -d "${pkgdir}/usr/share/licenses/${pkgname}"
